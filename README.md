@@ -2,3 +2,24 @@ cgateweb
 ========
 
 MQTT interface for C-Bus written in Node.js
+
+Usage:
+
+1) Put your settings in settings.js
+2) Run node index.js
+
+
+Updates get published on these topics:
+cbus/read/#1/#2/#3/state  -  ON/OFF gets published to these topics if the light is turned on/off
+cbus/read/#!/#2/#3/level  -  The level of the light gets published to these topics
+
+Publish to these topics to turn lights on/off. Wildcards don't work:
+cbus/write/#1/#2/#3/switch  -  Publish ON/OFF to these topics to turn lights on/off
+cbus/write/#1/#2/#3/ramp  -  Publish a % to ramp to that %. Optionally add a comma then a time (e.g. 50,4s or 100,2m). Also, INCREASE/DECREASE ramp by 5% up or down and ON/OFF turns on/off. 
+
+This requests an update from all lights:
+cbus/write/#1/#2//getall - current values get published on the cbus/read topics
+
+Other notes:
+I made this for working with OpenHAB
+It assumes the default cgate ports
