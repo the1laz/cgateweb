@@ -1,0 +1,79 @@
+{
+  "author": {
+    "name": "Adam Rudd",
+    "email": "adam.rudd@uqconnect.edu.au"
+  },
+  "name": "mqtt",
+  "description": "A library for the MQTT protocol",
+  "version": "0.3.12",
+  "contributors": [
+    {
+      "name": "Matteo Collina",
+      "email": "matteo.collina@gmail.com",
+      "url": "https://github.com/mcollina"
+    }
+  ],
+  "keywords": [
+    "mqtt",
+    "publish/subscribe",
+    "publish",
+    "subscribe"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/adamvr/MQTT.js.git"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "pre-commit": "test",
+  "bin": {
+    "mqtt_pub": "./bin/mqtt_pub",
+    "mqtt_sub": "./bin/mqtt_sub"
+  },
+  "engines": {
+    "node": ">=0.8.6"
+  },
+  "browser": {
+    "./lib/mqtt.js": "./lib/browser.js"
+  },
+  "dependencies": {
+    "readable-stream": "~1.0.2"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "should": "*",
+    "pre-commit": "0.0.7",
+    "sinon": "~1.10.0"
+  },
+  "gitHead": "cc8a0a2aa2613c0b210af04b96e36c322e1f49e7",
+  "bugs": {
+    "url": "https://github.com/adamvr/MQTT.js/issues"
+  },
+  "homepage": "https://github.com/adamvr/MQTT.js",
+  "_id": "mqtt@0.3.12",
+  "_shasum": "9cde0e58627b4d217afb3a9dfceb39d08bf23645",
+  "_from": "mqtt@",
+  "_npmVersion": "1.4.21",
+  "_npmUser": {
+    "name": "matteo.collina",
+    "email": "hello@matteocollina.com"
+  },
+  "maintainers": [
+    {
+      "name": "adamvr",
+      "email": "adam.rudd@uqconnect.edu.au"
+    },
+    {
+      "name": "matteo.collina",
+      "email": "hello@matteocollina.com"
+    }
+  ],
+  "dist": {
+    "shasum": "9cde0e58627b4d217afb3a9dfceb39d08bf23645",
+    "tarball": "http://registry.npmjs.org/mqtt/-/mqtt-0.3.12.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/mqtt/-/mqtt-0.3.12.tgz"
+}

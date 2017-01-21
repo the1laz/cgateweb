@@ -9,8 +9,15 @@ var eventEmitter = new events.EventEmitter();
 // MQTT URL
 var mqtt_url = url.parse('mqtt://'+settings.mqtt);
 
+// Username and password
+var OPTIONS = {};
+if(settings.mqttusername && settings.mqttpassword) {
+  OPTIONS.username = settings.mqttusername;
+  OPTIONS.password = settings.mqttpassword;
+}
+
 // Create an MQTT client connection
-var client = mqtt.createClient(mqtt_url.port, mqtt_url.hostname);
+var client = mqtt.createClient(mqtt_url.port, mqtt_url.hostname,OPTIONS);
 
 var HOST = settings.cbusip;
 var COMPORT = 20023;
