@@ -8,7 +8,7 @@ Usage:
 1) Put your settings in settings.js
 2) Run node index.js
 
-Detailed guides and supporting articles will be posted on my blog: http://www.addictedtopi.com/tagged/c-bus
+Detailed guides and supporting articles will be posted on my blog: https://blog.addictedtopi.com/category/project/cbus/
 
 Updates get published on these topics:
 
