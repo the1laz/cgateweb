@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "mqtt": "^0.3.12"
+    "mqtt": "^0.3.12",
+    "xml2js": "^0.4.19"
   }
 }

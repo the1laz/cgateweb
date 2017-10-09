@@ -20,13 +20,19 @@ Publish to these topics to control the lights. Wildcards don't work:
 
 cbus/write/#1/#2/#3/switch  -  Publish ON/OFF to these topics to turn lights on/off
 
-cbus/write/#1/#2/#3/ramp  -  Publish a % to ramp to that %. Optionally add a comma then a time (e.g. 50,4s or 100,2m). Also, INCREASE/DECREASE ramp by 5% up or down and ON/OFF turns on/off. 
+cbus/write/#1/#2/#3/ramp  -  Publish a % to ramp to that %. Optionally add a comma then a time (e.g. 50,4s or 100,2m). Also, INCREASE/DECREASE ramp by 5% up or down and ON/OFF turns on/off.
 
 This requests an update from all lights:
 
 cbus/write/#1/#2//getall - current values get published on the cbus/read topics
 
  #1,#2 and #3 should be replaced by your c-bus network number, application number, and the group number.
+
+Requesting an update on start or periodic updates can be set in the settings file.
+
+This requests the network tree:
+
+cbus/write/#1///gettree - result gets published on cbus/read/#1///tree
 
 Other notes:
 I made this for working with OpenHAB
