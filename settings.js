@@ -22,6 +22,8 @@ exports.mqtt = '127.0.0.1:1883';
 // how often to request after start (in seconds), comment out to disable
 // exports.getallperiod = 60*60;
 
+// exports.retainreads = true;
+
 
 //logging
 exports.logging = false;
