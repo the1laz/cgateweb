@@ -32,7 +32,7 @@ Requesting an update on start or periodic updates can be set in the settings fil
 
 This requests the network tree:
 
-cbus/write/#1///gettree - result gets published on cbus/read/#1///tree
+cbus/write/#1///gettree - result gets published as JSON on cbus/read/#1///tree
 
 Other notes:
 I made this for working with OpenHAB
