@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 var mqtt = require('mqtt'), url = require('url');
 var net = require('net');
 var events = require('events');
