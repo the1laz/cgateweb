@@ -16,12 +16,13 @@ exports.mqtt = '127.0.0.1:1883';
 // net and app for automatically requesting values
 // exports.getallnetapp = '254/56';
 
-// whether to request on start
+// whether to request on start (requires getallnetapp set as well)
 // exports.getallonstart = true;
 
-// how often to request after start (in seconds), comment out to disable
+// how often to request after start (in seconds), (requires getallnetapp set as well)
 // exports.getallperiod = 60*60;
 
+// Sets MQTT retain flag for values coming from cgate
 // exports.retainreads = true;
 
 
