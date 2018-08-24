@@ -7,7 +7,7 @@ MQTT interface for C-Bus written in Node.js
 (for raspberry pi)
 ```
 cd /usr/local/bin
-sudo git clone http://192.168.1.9:10080/the1laz/cgateweb.git
+sudo git clone https://github.com/the1laz/cgateweb.git
 cd cgateweb
 sudo nano settings.js
 ```
