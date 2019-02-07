@@ -9,6 +9,7 @@ MQTT interface for C-Bus written in Node.js
 cd /usr/local/bin
 sudo git clone https://github.com/the1laz/cgateweb.git
 cd cgateweb
+npm install
 sudo nano settings.js
 ```
 Put in your settings.
