@@ -37,6 +37,48 @@ var client = mqtt.createClient(mqtt_url.port, mqtt_url.hostname,OPTIONS);
 var command = new net.Socket();
 var event = new net.Socket();
 
+var queue =  {
+  publish: function (topic, payload ) {
+    queue.queue.push({topic:topic,payload:payload})
+    if(queue.interval === null) {
+      queue.interval = setInterval(queue.process,100)
+      queue.process()
+    }
+  },
+  process: function() {
+    if(queue.queue.length === 0) {
+      clearInterval(queue.interval)
+      queue.interval = null
+    } else {
+      var msg = queue.queue.shift()
+      client.publish(msg.topic,msg.payload)
+    }
+  },
+  interval: null,
+  queue:[]
+}
+
+var queue2 =  {
+  write: function (value) {
+    queue2.queue.push(value)
+    if(queue2.interval === null) {
+      queue2.interval = setInterval(queue2.process,100)
+      queue2.process()
+    }
+  },
+  process: function() {
+    if(queue2.queue.length === 0) {
+      clearInterval(queue2.interval)
+      queue2.interval = null
+    } else {
+      command.write(queue2.queue.shift())
+    }
+  },
+  interval: null,
+  queue:[]
+}
+
+
 var HOST = settings.cbusip;
 var COMPORT = 20023;
 var EVENTPORT = 20025;
@@ -55,13 +97,13 @@ function started(){
     console.log('ALL CONNECTED');
     if(settings.getallnetapp && settings.getallonstart) {
       console.log('Getting all values');
-      command.write('GET //'+settings.cbusname+'/'+settings.getallnetapp+'/* level\n');
+      queue2.write('GET //'+settings.cbusname+'/'+settings.getallnetapp+'/* level\n');
     }
     if(settings.getallnetapp && settings.getallperiod) {
       clearInterval(interval);
       setInterval(function(){
         console.log('Getting all values');
-        command.write('GET //'+settings.cbusname+'/'+settings.getallnetapp+'/* level\n');
+        queue2.write('GET //'+settings.cbusname+'/'+settings.getallnetapp+'/* level\n');
       },settings.getallperiod*1000);
     }
   }
@@ -92,20 +134,20 @@ client.on('connect', function() { // When connected
         // Get updates from all groups
         case "gettree":
           treenet = parts[2];
-          command.write('TREEXML '+parts[2]+'\n');
+          queue2.write('TREEXML '+parts[2]+'\n');
           break;
 
 
         // Get updates from all groups
         case "getall":
-          command.write('GET //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/* level\n');
+          queue2.write('GET //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/* level\n');
           break;
 
         // On/Off control
         case "switch":
 
-          if(message == "ON") {command.write('ON //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+'\n')};
-          if(message == "OFF") {command.write('OFF //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+'\n')};
+          if(message == "ON") {queue2.write('ON //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+'\n')};
+          if(message == "OFF") {queue2.write('OFF //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+'\n')};
           break;
 
         // Ramp, increase/decrease, on/off control
@@ -114,30 +156,30 @@ client.on('connect', function() { // When connected
             case "INCREASE":
               eventEmitter.on('level',function increaseLevel(address,level) {
                 if (address == parts[2]+'/'+parts[3]+'/'+parts[4]) {
-                  command.write('RAMP //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+' '+Math.min((level+26),255)+' '+'\n');
+                  queue2.write('RAMP //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+' '+Math.min((level+26),255)+' '+'\n');
                   eventEmitter.removeListener('level',increaseLevel);
                 }
               });
-              command.write('GET //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+' level\n');
+              queue2.write('GET //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+' level\n');
 
               break;
 
             case "DECREASE":
               eventEmitter.on('level',function decreaseLevel(address,level) {
                 if (address == parts[2]+'/'+parts[3]+'/'+parts[4]) {
-                  command.write('RAMP //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+' '+Math.max((level-26),0)+' '+'\n');
+                  queue2.write('RAMP //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+' '+Math.max((level-26),0)+' '+'\n');
                   eventEmitter.removeListener('level',decreaseLevel);
                 }
               });
-              command.write('GET //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+' level\n');
+              queue2.write('GET //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+' level\n');
 
               break;
 
             case "ON":
-              command.write('ON //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+'\n');
+              queue2.write('ON //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+'\n');
               break;
             case "OFF":
-              command.write('OFF //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+'\n');
+              queue2.write('OFF //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+'\n');
               break;
             default:
               var ramp = message.split(",");
@@ -145,9 +187,9 @@ client.on('connect', function() { // When connected
               if (!isNaN(num) && num < 256) {
 
                 if (ramp.length > 1) {
-                  command.write('RAMP //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+' '+num+' '+ramp[1]+'\n');
+                  queue2.write('RAMP //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+' '+num+' '+ramp[1]+'\n');
                 } else {
-                  command.write('RAMP //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+' '+num+'\n');
+                  queue2.write('RAMP //'+settings.cbusname+'/'+parts[2]+'/'+parts[3]+'/'+parts[4]+' '+num+'\n');
                 }
               }
           }
@@ -158,7 +200,7 @@ client.on('connect', function() { // When connected
   });
 
   // publish a message to a topic
-  client.publish('hello/world', 'CBUS ON', function() {
+  queue.publish('hello/world', 'CBUS ON', function() {
   });
 });
 
@@ -173,7 +215,7 @@ event.on('error',function(err){
 command.on('connect',function(err){
   commandConnected = true;
   console.log('CONNECTED TO C-GATE COMMAND PORT: ' + HOST + ':' + COMPORT);
-  command.write('EVENT ON\n');
+  queue2.write('EVENT ON\n');
   started()
   clearInterval(commandInterval);
 })
@@ -219,14 +261,14 @@ command.on('data',function(data) {
         if (parseInt(level[1]) == 0) {
           if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' OFF');}
           if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' 0%');}
-          client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'OFF',options, function() {});
-          client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '0',options, function() {});
+          queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'OFF',options, function() {});
+          queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '0',options, function() {});
           eventEmitter.emit('level',address[3]+'/'+address[4]+'/'+address[5],0);
         } else {
           if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' ON');}
           if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' '+Math.round(parseInt(level[1])*100/255).toString()+'%');}
-          client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'ON',options, function() {});
-          client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , Math.round(parseInt(level[1])*100/255).toString(),options, function() {});
+          queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'ON',options, function() {});
+          queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , Math.round(parseInt(level[1])*100/255).toString(),options, function() {});
           eventEmitter.emit('level',address[3]+'/'+address[4]+'/'+address[5],Math.round(parseInt(level[1])));
 
         }
@@ -238,7 +280,7 @@ command.on('data',function(data) {
         parseString(tree, function (err, result) {
           try{
             if(logging === true) {console.log("C-Bus tree received:"+JSON.stringify(result))}
-            client.publish('cbus/read/'+treenet+'///tree',JSON.stringify(result))
+            queue.publish('cbus/read/'+treenet+'///tree',JSON.stringify(result))
           }catch(err){
             console.log(err)
           }
@@ -252,14 +294,14 @@ command.on('data',function(data) {
           if (parseInt(level[1]) == 0) {
             if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' OFF');}
             if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' 0%');}
-            client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'OFF',options, function() {});
-            client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '0',options, function() {});
+            queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'OFF',options, function() {});
+            queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '0',options, function() {});
             eventEmitter.emit('level',address[3]+'/'+address[4]+'/'+address[5],0);
           } else {
             if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' ON');}
             if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' '+Math.round(parseInt(level[1])*100/255).toString()+'%');}
-            client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'ON',options, function() {});
-            client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , Math.round(parseInt(level[1])*100/255).toString(),options, function() {});
+            queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'ON',options, function() {});
+            queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , Math.round(parseInt(level[1])*100/255).toString(),options, function() {});
             eventEmitter.emit('level',address[3]+'/'+address[4]+'/'+address[5],Math.round(parseInt(level[1])));
 
           }
@@ -282,26 +324,26 @@ event.on('data', function(data) {
         case "on":
           if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' ON');}
           if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' 100%');}
-          client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'ON',options, function() {});
-          client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '100',options, function() {});
+          queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'ON',options, function() {});
+          queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '100',options, function() {});
           break;
         case "off":
           if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' OFF');}
           if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' 0%');}
-          client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'OFF',options, function() {});
-          client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '0',options, function() {});
+          queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'OFF',options, function() {});
+          queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '0',options, function() {});
           break;
         case "ramp":
           if(parseInt(parts[3]) > 0) {
           if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' ON');}
           if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' '+Math.round(parseInt(parts[3])*100/255).toString()+'%');}
-            client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'ON',options, function() {});
-            client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , Math.round(parseInt(parts[3])*100/255).toString(),options, function() {});
+            queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'ON',options, function() {});
+            queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , Math.round(parseInt(parts[3])*100/255).toString(),options, function() {});
           } else {
           if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' OFF');}
           if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' 0%');}
-            client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'OFF',options, function() {});
-            client.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '0',options, function() {});
+            queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'OFF',options, function() {});
+            queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '0',options, function() {});
           }
           break;
         default:
