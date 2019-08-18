@@ -21,6 +21,7 @@ var commandConnected = false;
 var eventConnected = false;
 var buffer = "";
 var eventEmitter = new events.EventEmitter();
+var messageinterval = settings.messageinterval || 200;
 
 // MQTT URL
 var mqtt_url = url.parse('mqtt://'+settings.mqtt);
@@ -41,7 +42,7 @@ var queue =  {
   publish: function (topic, payload ) {
     queue.queue.push({topic:topic,payload:payload})
     if(queue.interval === null) {
-      queue.interval = setInterval(queue.process,100)
+      queue.interval = setInterval(queue.process,messageinterval)
       queue.process()
     }
   },
@@ -62,7 +63,7 @@ var queue2 =  {
   write: function (value) {
     queue2.queue.push(value)
     if(queue2.interval === null) {
-      queue2.interval = setInterval(queue2.process,100)
+      queue2.interval = setInterval(queue2.process,messageinterval)
       queue2.process()
     }
   },

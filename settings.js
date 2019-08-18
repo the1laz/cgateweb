@@ -25,6 +25,7 @@ exports.mqtt = '127.0.0.1:1883';
 // Sets MQTT retain flag for values coming from cgate
 // exports.retainreads = true;
 
+exports.messageinterval = 200;
 
 //logging
 exports.logging = false;
