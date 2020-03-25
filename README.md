@@ -1,7 +1,9 @@
 cgateweb
 ========
 
-MQTT interface for C-Bus written in Node.js
+MQTT interface for C-Bus lighting written in Node.js
+
+(If you're looking for HVAC, I haven't/can't try it but have a look at this fork: https://github.com/mminehanNZ/cgateweb)
 
 ### Install:
 (for raspberry pi)
