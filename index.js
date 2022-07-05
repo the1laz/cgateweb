@@ -34,7 +34,9 @@ if(settings.mqttusername && settings.mqttpassword) {
 }
 
 // Create an MQTT client connection
-var client = mqtt.createClient(mqtt_url.port, mqtt_url.hostname,OPTIONS);
+//var client = mqtt.createClient(mqtt_url.port, mqtt_url.hostname,OPTIONS);
+const mqttOptions={ clientId:'mqtt-cgate', username: settings.mqttusername, password: settings.mqttpassword, clean:true};
+var client = mqtt.connect(mqtt_url,mqttOptions);
 var command = new net.Socket();
 var event = new net.Socket();
 
