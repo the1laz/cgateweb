@@ -21,7 +21,7 @@ var commandConnected = false;
 var eventConnected = false;
 var buffer = "";
 var eventEmitter = new events.EventEmitter();
-var messageinterval = settings.messageinterval || 200;
+var messageinterval = settings.messageinterval || 0;
 
 // MQTT URL
 var mqtt_url = url.parse('mqtt://'+settings.mqtt);
