@@ -161,7 +161,8 @@ client.on('connect', function() { // When connected
 
         // Ramp, increase/decrease, on/off control
         case "ramp":
-          switch(message.toUpperCase()) {
+            message = String(message);
+            switch(message.toUpperCase()) {
             case "INCREASE":
               eventEmitter.on('level',function increaseLevel(address,level) {
                 if (address == parts[2]+'/'+parts[3]+'/'+parts[4]) {
