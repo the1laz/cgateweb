@@ -21,7 +21,7 @@ var commandConnected = false;
 var eventConnected = false;
 var buffer = "";
 var eventEmitter = new events.EventEmitter();
-var messageinterval = settings.messageinterval || 200;
+var messageinterval = settings.messageinterval || 0;
 
 // MQTT URL
 var mqtt_url = url.parse('mqtt://'+settings.mqtt);
@@ -34,7 +34,9 @@ if(settings.mqttusername && settings.mqttpassword) {
 }
 
 // Create an MQTT client connection
-var client = mqtt.createClient(mqtt_url.port, mqtt_url.hostname,OPTIONS);
+//var client = mqtt.createClient(mqtt_url.port, mqtt_url.hostname,OPTIONS);
+const mqttOptions={ clientId:'mqtt-cgate', username: settings.mqttusername, password: settings.mqttpassword, clean:true};
+var client = mqtt.connect(mqtt_url,mqttOptions);
 var command = new net.Socket();
 var event = new net.Socket();
 
@@ -83,6 +85,7 @@ var queue2 =  {
 var HOST = settings.cbusip;
 var COMPORT = 20023;
 var EVENTPORT = 20025;
+var KEEPALIVE = 30;
 
 var logging = settings.logging;
 
@@ -107,6 +110,11 @@ function started(){
         queue2.write('GET //'+settings.cbusname+'/'+settings.getallnetapp+'/* level\n');
       },settings.getallperiod*1000);
     }
+    // Send a NOOP to the Cgate server to keep the connection open and detect if the connection was closed
+    setInterval(function(){
+      console.log('NOOP');
+      command.write('NOOP\n');
+    },KEEPALIVE);
   }
 
 }
@@ -153,7 +161,8 @@ client.on('connect', function() { // When connected
 
         // Ramp, increase/decrease, on/off control
         case "ramp":
-          switch(message.toUpperCase()) {
+            message = String(message);
+            switch(message.toUpperCase()) {
             case "INCREASE":
               eventEmitter.on('level',function increaseLevel(address,level) {
                 if (address == parts[2]+'/'+parts[3]+'/'+parts[4]) {
@@ -317,38 +326,40 @@ command.on('data',function(data) {
 // Add a 'data' event handler for the client socket
 // data is what the server sent to this socket
 event.on('data', function(data) {
-    // if (logging == true) {console.log('Event data: ' + data);}
-    var parts = data.toString().split(" ");
-    if(parts[0] == "lighting") {
-      address = parts[2].split("/");
-      switch(parts[1]) {
-        case "on":
-          if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' ON');}
-          if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' 100%');}
-          queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'ON',options, function() {});
-          queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '100',options, function() {});
-          break;
-        case "off":
-          if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' OFF');}
-          if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' 0%');}
-          queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'OFF',options, function() {});
-          queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '0',options, function() {});
-          break;
-        case "ramp":
-          if(parseInt(parts[3]) > 0) {
-          if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' ON');}
-          if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' '+Math.round(parseInt(parts[3])*100/255).toString()+'%');}
-            queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'ON',options, function() {});
-            queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , Math.round(parseInt(parts[3])*100/255).toString(),options, function() {});
-          } else {
-          if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' OFF');}
-          if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' 0%');}
-            queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'OFF',options, function() {});
-            queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '0',options, function() {});
+    if (logging == true) {console.log('Event data: ' + data);}
+    data.toString().split(/\r?\n/).forEach(line =>  {
+        if (logging == true) {console.log('Event line: ' + line);}
+        var parts = line.split(" ");
+        if(parts[0] == "lighting") {
+          address = parts[2].split("/");
+          switch(parts[1]) {
+            case "on":
+              if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' ON');}
+              if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' 100%');}
+              queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'ON',options, function() {});
+              queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '100',options, function() {});
+              break;
+            case "off":
+              if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' OFF');}
+              if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' 0%');}
+              queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'OFF',options, function() {});
+              queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '0',options, function() {});
+              break;
+            case "ramp":
+              if(parseInt(parts[3]) > 0) {
+              if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' ON');}
+              if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' '+Math.round(parseInt(parts[3])*100/255).toString()+'%');}
+                queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'ON',options, function() {});
+                queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , Math.round(parseInt(parts[3])*100/255).toString(),options, function() {});
+              } else {
+              if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' OFF');}
+              if (logging == true) {console.log('C-Bus status received: '+address[3] +'/'+address[4]+'/'+address[5]+' 0%');}
+                queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/state' , 'OFF',options, function() {});
+                queue.publish('cbus/read/'+address[3]+'/'+address[4]+'/'+address[5]+'/level' , '0',options, function() {});
+              }
+              break;
+            default:
           }
-          break;
-        default:
-      }
-    }
-
+        }
+    });
 });
