@@ -320,9 +320,9 @@ command.on('data',function(data) {
 // data is what the server sent to this socket
 event.on('data', function(data) {
     if (logging == true) {console.log('Event data: ' + data);}
-    data.split(/\r?\n/).forEach(line =>  {
+    data.toString().split(/\r?\n/).forEach(line =>  {
         if (logging == true) {console.log('Event line: ' + line);}
-        var parts = line.toString().split(" ");
+        var parts = line.split(" ");
         if(parts[0] == "lighting") {
           address = parts[2].split("/");
           switch(parts[1]) {
