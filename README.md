@@ -1,9 +1,13 @@
 cgateweb
 ========
+This repository is no longer maintained, I'd recommend grabbing a look at some of the forks which have added functionality and are probably more current, there's a couple linked below.
+========
 
 MQTT interface for C-Bus lighting written in Node.js
 
 (If you're looking for HVAC, I haven't/can't try it but have a look at this fork: https://github.com/mminehanNZ/cgateweb)
+
+(If you're using this with Home Assistant, this fork has added some useful features: https://github.com/dougrathbone/cgateweb)
 
 ### Install:
 (for raspberry pi)
