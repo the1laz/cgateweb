@@ -1,6 +1,6 @@
 cgateweb
 ========
-This repository is no longer maintained, I'd recommend grabbing a look at some of the forks which have added functionality and are probably more current, there's a couple linked below.
+This repository is no longer maintained, I'd recommend having a look at some of the forks which have added functionality and are probably more current, there's a couple linked below.
 ========
 
 MQTT interface for C-Bus lighting written in Node.js
